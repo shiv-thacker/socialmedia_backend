@@ -23,6 +23,15 @@ const userSchema = new mongoose.Schema({
     type: Array,
     default: [],
   },
+  followers: {
+    type: Array,
+    default: [],
+  },
+  following: { type: Array, default: [] },
+  description: {
+    type: String,
+    default: "",
+  },
 });
 // to bcrypt the password
 userSchema.pre("save", async function (next) {
