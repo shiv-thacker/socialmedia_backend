@@ -187,13 +187,15 @@ router.post("/signin", (req, res) => {
         if (!savedUser) {
           return res.status(422).json({ error: "user is not exist" });
         } else {
-          console.log(savedUser);
+          //console.log(savedUser);
           bcrypt.compare(password, savedUser.password).then((domatch) => {
             if (domatch) {
               const token = jwt.sign(
                 { _id: savedUser._id },
                 process.env.JWT_SECRET
               );
+              //({ _id: savedUser._id },process.env.JWT_SECRET)  It's making payload of token. when you want to fetch token back, payload will easily identufy
+              //user_id from token
 
               const { _id, username, email } = savedUser;
               return res.status(200).json({
@@ -215,8 +217,10 @@ router.post("/signin", (req, res) => {
 });
 
 //userdata
-router.post("/userdata", (req, res) => {
+router.post("/otheruserdata", (req, res) => {
   const { email } = req.body;
+  // here we use other's email, to get other user's data. we will not use this to get logged in user data, because with the help of this hacker can get all data of
+  // logged in user and make changes in his data., SO we will get user data with his token
 
   User.findOne({ email: email }).then((savedUser) => {
     if (!savedUser) {
@@ -228,6 +232,73 @@ router.post("/userdata", (req, res) => {
   });
 });
 
+router.post("/userdata", (req, res) => {
+  // once token applied, it changes evry time
+  const { authorization } = req.headers;
+  // here we use other's email, to get other user's data. we will not use this to get logged in user data, because with the help of this hacker can get all data of
+  // logged in user and make changes in his data.
+
+  if (!authorization) {
+    return res
+      .status(400)
+      .json({ error: "You must be logged in, token is not given" });
+  } else {
+    const token = authorization.replace("Bearer ", "");
+    console.log(token);
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, payload) => {
+      if (err) {
+        return res
+          .status(400)
+          .json({ error: "You must be logged in, token is not given" });
+      } else {
+        const { _id } = payload;
+        User.findOne({ _id }).then((userdata) => {
+          res.status(200).send({
+            message: "User found",
+            user: userdata,
+          });
+        });
+      }
+    });
+  }
+});
+
+//changepassword
+router.post("/changepassword", (req, res) => {
+  const { oldpassword, newpassword, email } = req.body;
+
+  if (!oldpassword || !newpassword || !email) {
+    return res.status(422).json({ error: "Please add all the feilds" });
+  } else {
+    User.findOne({ email: email }).then(async (savedUser) => {
+      if (savedUser) {
+        bcrypt.compare(oldpassword, savedUser.password).then((doMatch) => {
+          //here doMatch is either true or false
+          if (doMatch) {
+            savedUser.password = newpassword;
+            savedUser
+              .save()
+              .then((user) => {
+                return res
+                  .status(422)
+                  .json({ message: "Your password changed successfully" });
+              })
+              .catch((err) => {
+                return res.status(422).json({ error: "Server Error" });
+              });
+          } else {
+            return res
+              .status(422)
+              .json({ error: "Your password credentials are not right" });
+          }
+        });
+      } else {
+        return res.status(422).json({ error: "User not found" });
+      }
+    });
+  }
+});
 module.exports = router;
 
 // user.find() vs user.findOne()
