@@ -7,11 +7,13 @@ require("./db");
 require("./models/User");
 
 const authRoutes = require("./routes/authRoutes");
+const uploadMediaroutes = require("./routes/uploadMediaRoutes");
 const bodyParser = require("body-parser");
 //requiretoken skipped
 
 app.use(bodyParser.json());
 app.use(authRoutes);
+app.use(uploadMediaroutes);
 app.get("/", (req, res) => {
   res.send("hello");
 });

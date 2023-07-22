@@ -216,22 +216,6 @@ router.post("/signin", (req, res) => {
   }
 });
 
-//userdata
-router.post("/otheruserdata", (req, res) => {
-  const { email } = req.body;
-  // here we use other's email, to get other user's data. we will not use this to get logged in user data, because with the help of this hacker can get all data of
-  // logged in user and make changes in his data., SO we will get user data with his token
-
-  User.findOne({ email: email }).then((savedUser) => {
-    if (!savedUser) {
-      return res.status(422).json({ error: "Invalid Credentials" });
-    } else {
-      console.log(savedUser);
-      return res.status(200).json({ message: "User found", user: savedUser });
-    }
-  });
-});
-
 router.post("/userdata", (req, res) => {
   // once token applied, it changes evry time
   const { authorization } = req.headers;
@@ -298,6 +282,124 @@ router.post("/changepassword", (req, res) => {
       }
     });
   }
+});
+
+router.post("/setusername", (req, res) => {
+  const { username, email } = req.body;
+
+  if (!username || !email) {
+    return res.status(422).json({ error: "please fill all details" });
+  } else {
+    User.find({ username: username }).then(async (savedUser) => {
+      if (savedUser.length > 0) {
+        console.log(savedUser.length);
+        return res.status(422).json({ error: "Sorry username already exist" });
+      } else {
+        console.log(savedUser.length);
+        User.findOne({ email }).then(async (savedUser) => {
+          if (savedUser) {
+            savedUser.username = username;
+            savedUser
+              .save()
+              .then((user) => {
+                return res.status(200).json({ message: "Username updated" });
+              })
+              .catch((user) => {
+                return res
+                  .status(422)
+                  .json({ error: "Sorry, there's some server error" });
+              });
+          } else {
+            return res.status(422).json({ error: "Sorry email is not exist" });
+          }
+        });
+      }
+    });
+  }
+});
+
+router.post("/setdescription", (req, res) => {
+  const { description, email } = req.body;
+
+  if (!description || !email) {
+    return res.status(422).json({ error: "please fill all the feilds" });
+  } else {
+    User.findOne({ email: email })
+      .then(async (savedUser) => {
+        if (savedUser) {
+          savedUser.description = description;
+          savedUser.save();
+          return res
+            .status(422)
+            .json({ message: "Description added successfully" });
+        } else {
+          return res.status(422).json({ error: "Email is not exist" });
+        }
+      })
+      .catch((err) => {
+        return res.status(422).json({ error: "Server Error" });
+      });
+  }
+});
+
+//get search user data
+
+router.post("/searchuser", (req, res) => {
+  const { keyword } = req.body;
+
+  if (!keyword) {
+    return res.status(422).json({ error: "search username" });
+  }
+  User.find({ username: { $regex: keyword, $options: "i" } })
+    .then((user) => {
+      console.log(user);
+      let data = [];
+      user.map((item) => {
+        data.push({
+          _id: item._id,
+          username: item.username,
+          email: item.email,
+          description: item.description,
+          profilepic: item.profilepic,
+        });
+      });
+      if (data.length == 0) {
+        return res.status(422).json({ error: "no user found" });
+      } else {
+        return res.status(200).send({ message: "user found", user: data });
+      }
+    })
+    .catch((err) => {
+      return res.status(422).json({ error: "server error" });
+    });
+});
+
+//userdata
+router.post("/otheruserdata", (req, res) => {
+  const { email } = req.body;
+  // here we use other's email, to get other user's data. we will not use this to get logged in user data, because with the help of this hacker can get all data of
+  // logged in user and make changes in his data., SO we will get user data with his token
+
+  if (!email) {
+    return res.status(422).json({ error: "please add email" });
+  }
+  User.findOne({ email }).then((savedUser) => {
+    if (!savedUser) {
+      return res.status(422).json({ error: "Email not found" });
+    } else {
+      console.log(savedUser);
+      let data = {
+        _id: savedUser._id,
+        username: savedUser.username,
+        description: savedUser.description,
+        profilepic: savedUser.profilepic,
+        followers: savedUser.followers,
+        following: savedUser.following,
+        posts: savedUser.posts,
+      };
+      return res.status(200).send({ message: "User found", user: data });
+    }
+  });
 });
 module.exports = router;
 
