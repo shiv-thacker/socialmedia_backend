@@ -392,6 +392,7 @@ router.post("/otheruserdata", (req, res) => {
         _id: savedUser._id,
         username: savedUser.username,
         description: savedUser.description,
+        email: savedUser.email,
         profilepic: savedUser.profilepic,
         followers: savedUser.followers,
         following: savedUser.following,
@@ -401,6 +402,157 @@ router.post("/otheruserdata", (req, res) => {
     }
   });
 });
+
+// Check follower
+
+router.post("/checkfollower", (req, res) => {
+  const { followfrom, followto } = req.body;
+  //followfrom : myemail
+  //followto : other email
+  if (!followfrom || !followto) {
+    return res.status(422).json({ error: "not getting both email" });
+  } else {
+    User.findOne({ email: followfrom })
+      .then((mainuser) => {
+        if (!mainuser) {
+          return res.status(422).json({ error: "current user not exist" });
+        } else {
+          let data = mainuser.following.includes(followto);
+          // Includes response in true or false
+          if (data == true) {
+            return res.status(200).json({ message: "User in following list" });
+          } else {
+            return res
+              .status(200)
+              .json({ message: "User not in following list" });
+          }
+        }
+      })
+      .catch((err) => {
+        return res.status(422).json({ error: `Server Error ${err}` });
+      });
+  }
+});
+
+//follow user
+
+router.post("/followuser", (req, res) => {
+  const { followfrom, followto } = req.body;
+
+  //follow from :- may email
+  //follow to :- other friend's email
+
+  if (!followfrom || !followto) {
+    return res.status(422).json({ error: "not getting email from request" });
+  } else {
+    User.findOne({ email: followfrom })
+      .then((mainuser) => {
+        if (!mainuser) {
+          return res
+            .status(422)
+            .json({ error: "can't fetch your profile, please login again" });
+        } else {
+          let data = mainuser.following.includes(followto);
+
+          if (data == true) {
+            return res
+              .status(200)
+              .json({ messaage: "You are already following" });
+          } else {
+            mainuser.following.push(followto);
+            mainuser.save();
+            User.findOne({ email: followto })
+              .then((otheruser) => {
+                if (!otheruser) {
+                  return res.status(422).json({
+                    error:
+                      "can't fetch other user  profile, other user not exist",
+                  });
+                } else {
+                  let data = otheruser.followers.includes(followfrom);
+
+                  if (data == true) {
+                    return res.status(200).json({
+                      messaage:
+                        "other user's profile says: you are already following",
+                    });
+                  } else {
+                    otheruser.followers.push(followfrom);
+                    otheruser.save();
+
+                    return res.status(200).json({ message: "User Following" });
+                  }
+                }
+              })
+              .catch((err) => {
+                return res
+                  .status(422)
+                  .json({ error: "server error in finding other user" });
+              });
+          }
+        }
+      })
+      .catch((err) => {
+        return res.status(422).json({ error: "server error" });
+      });
+  }
+});
+
+//unfollow user
+router.post("/unfollowuser", (req, res) => {
+  const { followfrom, followto } = req.body;
+  console.log("unfollowing is calling");
+  if (!followfrom || !followto) {
+    return res.status(422).json({ error: "not fetching emails" });
+  } else {
+    User.findOne({ email: followfrom }).then((mainuser) => {
+      if (!mainuser) {
+        return res
+          .status(422)
+          .json({ error: "not fetching current user, please login again" });
+      } else {
+        if (mainuser.following.includes(followto)) {
+          mainuser.following.pull(followto);
+          mainuser.save();
+
+          User.findOne({ email: followto }).then((otheruser) => {
+            if (!otheruser) {
+              return res.status(422).json({
+                error: "not found this user, may be he his logged out",
+              });
+            } else {
+              if (otheruser.followers.includes(followfrom)) {
+                otheruser.followers.pull(followfrom);
+                otheruser.save();
+
+                return res
+                  .status(200)
+                  .json({ message: "Now You are Unfollowing" });
+              } else {
+                return res
+                  .status(422)
+                  .json({ message: "You are not in it's follower's profile" });
+              }
+            }
+          });
+        } else {
+          return res
+            .status(200)
+            .json({ message: " You are already not following that user " });
+        }
+      }
+    });
+  }
+});
+
+router.post("/hehe", (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(422).json({ err: "no email" });
+  }
+});
+
 module.exports = router;
 
 // user.find() vs user.findOne()
