@@ -41,9 +41,9 @@ io.on("connection", (socket) => {
     console.log("USER CONNECTED", socket.id);
   });
 
-  socket.on("join room", (data) => {
+  socket.on("join_room", (data) => {
     console.log(
-      "USER EITH SOCKET ID:",
+      "USER WITH SOCKET ID:",
       socket.id,
       "JOIN ROOM ID:",
       data.roomid
@@ -53,7 +53,7 @@ io.on("connection", (socket) => {
 
   socket.on("send_message", (data) => {
     console.log("MESSAGE received data", data);
-    io.emit("recieve_message", data);
+    io.emit("recieve_message", data); // When we tap on send this code will send data to receiver
   });
 });
 

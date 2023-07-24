@@ -20,26 +20,22 @@ router.post("/savemessagetodb", async (req, res) => {
     });
 
     await newMessage.save();
-    res.send("Message sent successfully");
+    res.send({ message: "Message sent successfully" });
   } catch (err) {
     console.log(" ERROR WHILE SAVING MESSAGE TO LINE 18 :", err);
-    res.status(422).send(err.Message);
+    res.status(422).send({ error: "Something went wrong after request" });
   }
 });
 
 router.post("/getmessages", async (req, res) => {
   const { roomid } = req.body;
 
-  if (!roomid) {
-    res.send("error");
-  }
-
   Message.find({ roomid: roomid })
-    .then((message) => {
-      res.send(message);
+    .then((messages) => {
+      res.send(messages);
     })
     .catch((err) => {
-      res.send(err);
+      console.log("error");
     });
 });
 
