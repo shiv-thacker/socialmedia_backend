@@ -32,6 +32,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: "",
   },
+  allmessages: {
+    type: Array,
+    default: [],
+  },
 });
 // to bcrypt the password
 userSchema.pre("save", async function (next) {
