@@ -10,6 +10,7 @@ const authRoutes = require("./routes/authRoutes");
 const uploadMediaroutes = require("./routes/uploadMediaRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 const bodyParser = require("body-parser");
+const mainPage = require("./routes/mainPage");
 //requiretoken skipped
 
 //make socket io
@@ -22,6 +23,7 @@ app.use(bodyParser.json());
 app.use(authRoutes);
 app.use(uploadMediaroutes);
 app.use(messageRoutes);
+app.use(mainPage);
 app.get("/", (req, res) => {
   res.send("hello");
 });

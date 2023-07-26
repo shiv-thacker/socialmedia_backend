@@ -1,4 +1,6 @@
 const mongoose = require("mongoose");
+const PostSchema = require("./Post");
+
 const bcrypt = require("bcrypt"); // to save password with modification
 
 const userSchema = new mongoose.Schema({
@@ -20,7 +22,7 @@ const userSchema = new mongoose.Schema({
     default: "",
   },
   posts: {
-    type: Array,
+    type: [PostSchema],
     default: [],
   },
   followers: {
